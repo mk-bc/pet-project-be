@@ -3,7 +3,6 @@ package config
 import (
 	"log"
 	"os"
-	"time"
 
 	"github.com/Valgard/godotenv"
 	"github.com/jinzhu/gorm"
@@ -37,40 +36,43 @@ func DBStart() *gorm.DB {
 	db.DropTableIfExists(&models.SavedJob{})
 	db.DropTableIfExists(&models.Job{}) //with foreign keys
 
-	db.DropTableIfExists(&models.Admin{}, &models.User{}, &models.UserSensitiveData{}, &models.Company{}, &models.CompanySensitiveData{}, &models.Job{}, &models.JobCategory{}, &models.JobStatus{}, &models.SavedJob{})
+	db.DropTableIfExists(&models.Admin{}, &models.User{}, &models.SensitiveData{}, &models.Company{}, &models.Job{}, &models.JobCategory{}, &models.JobStatus{}, &models.SavedJob{})
 
-	db.AutoMigrate(&models.Admin{}, &models.User{}, &models.UserSensitiveData{}, &models.Company{}, &models.CompanySensitiveData{}, &models.Job{}, &models.JobCategory{}, &models.JobStatus{}, &models.SavedJob{})
+	db.AutoMigrate(&models.Admin{}, &models.User{}, &models.SensitiveData{}, &models.Company{}, &models.Job{}, &models.JobCategory{}, &models.JobStatus{}, &models.SavedJob{})
 
 	models.AddForeignKeys(db)
 
 	// inserting sample data
 
 	// admin
+	adminCredentials := models.SensitiveData{
+		Email:    "admin1@bcode.in",
+		Password: os.Getenv("admin1_password"),
+		Role:     "admin",
+	}
+	db.Save(&adminCredentials)
+
 	admin := models.Admin{
-		AdminName:     "admin1",
-		AdminEmail:    "admin1@beautifulcode.in",
-		AdminPassword: os.Getenv("admin1_password"),
+		AdminName:  "admin1",
+		AdminEmail: "admin1@bcode.in",
 	}
 	db.Save(&admin)
 
 	// user
-	mk_password := os.Getenv("mk_password")
-	userSensitiveData := models.UserSensitiveData{
-		UserEmail:    "mk@beautifulcode.in",
-		UserPassword: mk_password,
+	userCredentials := models.SensitiveData{
+		Email:    "mk@bcode.in",
+		Password: os.Getenv("mk_password"),
+		Role:     "applicant",
 	}
-	db.Save(&userSensitiveData)
-	// db.Delete(&models.UserSensitiveData{})
-	// db.Delete(&models.User{})
+	db.Save(&userCredentials)
 
-	var userEmail models.UserSensitiveData
-	db.Model(&models.UserSensitiveData{}).Select([]string{"user_email"}).First(&userEmail)
+	var userEmail models.SensitiveData
+	db.Model(&models.SensitiveData{}).Select([]string{"email"}).Where("role = ?", "applicant").First(&userEmail)
 
 	user := models.User{
 		UserName:    "mk",
-		UserEmail:   userEmail.UserEmail,
+		UserEmail:   userCredentials.Email,
 		UserImage:   "https://cdn-icons-png.flaticon.com/128/552/552721.png",
-		UserDoB:     time.Date(2002, time.January, 15, 0, 0, 0, 0, time.Local),
 		PhoneNumber: "9999999999",
 		Description: "description",
 		Skills:      "skill1, skill2, skill3",
@@ -78,15 +80,16 @@ func DBStart() *gorm.DB {
 	db.Create(&user)
 
 	// company
-	companySenstiveData := models.CompanySensitiveData{
-		CompanyEmail:    "ops@beautifulcode.in",
-		CompanyPassword: os.Getenv("company_password"),
+	companySenstiveData := models.SensitiveData{
+		Email:    "ops@bcode.in",
+		Password: os.Getenv("company_password"),
+		Role:     "company",
 	}
 	db.Create(&companySenstiveData)
 
 	company := models.Company{
 		CompanyName:  "BeautifulCode LLP",
-		CompanyEmail: companySenstiveData.CompanyEmail,
+		CompanyEmail: companySenstiveData.Email,
 		CompanyImage: "",
 		Description:  "description of company",
 	}

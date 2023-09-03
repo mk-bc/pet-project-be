@@ -2,7 +2,6 @@ package models
 
 import (
 	"database/sql/driver"
-	"time"
 
 	"github.com/jinzhu/gorm"
 
@@ -30,11 +29,16 @@ func (a ApplicationStatus) Value() (driver.Value, error) {
 
 // db models
 
+type SensitiveData struct {
+	Email    string `gorm:"primary_key"`
+	Password string
+	Role     string
+}
+
 type Admin struct {
 	gorm.Model
-	AdminName     string
-	AdminEmail    string `gorm:"unique; not null"`
-	AdminPassword string
+	AdminName  string
+	AdminEmail string `gorm:"unique; not null"` //foreign key to sensitive data
 }
 
 type User struct {
@@ -44,16 +48,10 @@ type User struct {
 	// UserPassword string
 	UserImage   string
 	PhoneNumber string
-	UserDoB     time.Time
 	Description string `gorm:"size:500"`
 	Skills      string
 	// Jobs        []*Job //`gorm:"many2many:job_applicants"`
 	JobStatuses []*JobStatus
-}
-
-type UserSensitiveData struct {
-	UserEmail    string `gorm:"primary_key"`
-	UserPassword string
 }
 
 type Company struct {
@@ -65,11 +63,6 @@ type Company struct {
 	// Jobs            []*Job //posts several jobs (has-many relationship)
 	// instead of all the jobs stored without any order storing categories of jobs in a company is more meaningful.
 	Categories []*JobCategory //job categories in which the company is hiring.
-}
-
-type CompanySensitiveData struct {
-	CompanyEmail    string `gorm:"primary_key"`
-	CompanyPassword string
 }
 
 type Job struct {
@@ -103,9 +96,11 @@ type SavedJob struct {
 
 func AddForeignKeys(db *gorm.DB) {
 
-	db.Model(&User{}).AddForeignKey("user_email", "user_sensitive_data(user_email)", "CASCADE", "CASCADE")
+	db.Model(&Admin{}).AddForeignKey("admin_email", "sensitive_data(email)", "CASCADE", "CASCADE")
 
-	db.Model(&Company{}).AddForeignKey("company_email", "company_sensitive_data(company_email)", "CASCADE", "CASCADE")
+	db.Model(&User{}).AddForeignKey("user_email", "sensitive_data(email)", "CASCADE", "CASCADE")
+
+	db.Model(&Company{}).AddForeignKey("company_email", "sensitive_data(email)", "CASCADE", "CASCADE")
 
 	db.Model(&Job{}).AddForeignKey("company_id", "companies(id)", "CASCADE", "CASCADE")
 

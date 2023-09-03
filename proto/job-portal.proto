@@ -4,6 +4,329 @@ package proto;
 
 option go_package="./proto";
 
-service JobPortal {
+service JobPortalService {
+    // admin specific rpc
+    rpc AdminLogin(AdminLoginRequest) returns (AdminLoginResponse){};
+    // rpc RegisterAdmin(RegisterAdminRequest) returns (RegisterAdminResponse) {};
+
+    // company rpc 
     
+    rpc RegisterCompany(RegisterCompanyRequest) returns (RegisterCompanyResponse) {};
+    rpc CompanyLogin(CompanyLoginRequest) returns (CompanyLoginResponse) {};
+    rpc DeleteCompany(DeleteCompanyRequest) returns (DeleteCompanyResponse) {};
+    // fetching company data: called by companies and users
+    rpc UpdateCompanyData(UpdateCompanyDataRequest) returns (UpdatecompanyDataResponse){};
+    rpc CreateNewJob(CreateNewJobRequest) returns (CreateNewJobResponse){};
+    // to fetch job categories: companies while creating jobs, users while searching for jobs
+    // if no available category is apt then create new job category
+    rpc CreateNewJobCategory(CreateNewJobCategoryRequest) returns (CreateNewJobCategoryResponse){};
+    rpc UpdateJobData(UpdateJobDataRequest) returns (UpdateJobDataResponse){};
+    // fetch jobs of specific category by one company - filter by company and category
+    rpc DeleteJob(DeleteJobRequest) returns (DeleteJobResponse){};
+    rpc FetchApplicantsByJobID(FetchApplicantsByJobIDRequest) returns (FetchApplicantsByJobIDResponse){};
+    // companies shortlisting/rejecting candidates
+    rpc ModifyApplicantApplication(ModifyApplicantApplicationRequest) returns (ModifyApplicantApplicationResponse){};
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse){};
+
+    // user rpc
+    
+    rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse){};
+    rpc UserLogin(UserLoginRequest) returns (UserLoginResponse){};
+    // fetching user data: can be called by companies while processing candidates, users for check/update profile
+    rpc UpdateUserData(UpdateUserDataRequest) returns (UpdateUserDataResponse){};
+    // fetch jobs of specific category by one company - filter by company and category
+    rpc UserJobApplication(UserJobApplicationRequest) returns (UserJobApplicationResponse){};
+    rpc CheckAppliedJobs(CheckAppliedJobsRequest) returns (CheckAppliedJobsResponse){};
+    rpc UserSavedJob(UserSavedJobRequest) returns (UserSavedJobResponse){};
+    rpc UserRemoveSavedJob(UserRemoveSavedJobRequest) returns (UserRemoveSavedJobResponse){};
+
+
+
+    // model agnostic rpc methods (can be called publicly)
+
+    rpc FetchCompanyData(FetchCompanyDataRequest) returns (FetchCompanyDataResponse){};
+    rpc FetchUserData(FetchUserDataRequest) returns  (FetchUserDataResponse){};
+    rpc FetchJobCategories(FetchJobCategoriesRequest) returns (FetchJobCategoriesResponse){};
+    rpc FetchAllJobs(NoParams) returns (FetchAllJobsResponse){};
+    rpc FetchJobsByCompanyID(FetchJobsByCompanyIDRequest) returns (FetchJobsByCompanyIDResponse){};
+    rpc FetchJobsByCategoryID(FetchJobsByCategoryIDRequest) returns (FetchJobsByCategoryIDResponse){};
+    rpc FetchCompanyJobsByCategory(FetchCompanyJobsByCategoryRequest) returns (FetchCompanyJobsByCategoryResponse){};
+}
+
+enum ApplicationStatus {
+    approved = 0;
+    pending = 1;
+    rejected = 2;
+}
+
+message SensitiveData {
+    string email = 1;
+    string password = 2;
+}
+
+message Admin {
+    uint32 admin_id = 1;
+    string admin_name = 2;
+    string admin_email = 3;
+}
+
+message User {
+    uint32 user_id = 1;
+    string user_name = 2;
+    string user_email = 3;
+    // string user_password = 4;
+    string user_image = 4;
+    string phone_number = 5;
+    string description = 6;
+    string skills = 7;
+}
+
+message Company {
+    uint32 company_id = 1;
+    string company_name = 2;
+    string company_email = 3;
+    // string company_password = 4;
+    string company_image = 4;
+    string description = 5;
+}
+
+message Job {
+    uint32 job_id = 1;
+    string job_title = 2;
+    string job_description = 3;
+    string salary = 4;
+    uint32 company_id = 5;
+    uint32 category_id = 6;
+}
+
+message JobStatus {
+    uint32 id = 1;
+    uint32 job_id = 2;
+    uint32 user_id = 3;
+    ApplicationStatus application_status = 4;
+}
+
+message JobCategory {
+    uint32 category_id = 1;
+    string category_name = 2;
+}
+
+message SavedJob {
+    uint32 id = 1;
+    uint32 job_id = 2;
+    uint32 user_id = 3;
+}
+
+message AdminLoginRequest {
+    SensitiveData Admin = 1;
+}
+
+message AdminLoginResponse {
+    string access_token = 1;
+}
+
+message RegisterCompanyRequest {
+    SensitiveData companyCredentials = 1;
+    Company company = 2;
+}
+
+message RegisterCompanyResponse {
+    string access_token = 1;
+}
+
+message CompanyLoginRequest {
+    SensitiveData credentials = 1;
+}
+
+message CompanyLoginResponse {
+    string access_token = 1;
+}
+
+message DeleteCompanyRequest {
+    uint32 company_id = 1;
+}
+
+message DeleteCompanyResponse {
+    string status = 1;
+}
+
+message FetchCompanyDataRequest {
+    uint32 company_id = 1;
+}
+
+message FetchCompanyDataResponse {
+    Company company = 1;
+}
+
+message UpdateCompanyDataRequest {
+    SensitiveData credentials = 1;
+    Company company = 2;
+}
+
+message UpdatecompanyDataResponse {
+    string status = 1;
+    Company company = 2;
+}
+
+message CreateNewJobRequest {
+    Job job = 1;
+}
+
+message CreateNewJobResponse {
+    string status = 1;
+    Job job = 2;
+}
+
+message UpdateJobDataRequest {
+    Job job = 1;
+}
+
+message UpdateJobDataResponse {
+    string  status = 1;
+    Job job = 2;
+}
+
+message DeleteJobRequest {
+    uint32 job_id = 1;
+}
+
+message DeleteJobResponse {
+    string status = 1;
+}
+
+message FetchApplicantsByJobIDRequest {
+    uint32 job_id = 1;
+}
+
+message FetchApplicantsByJobIDResponse {
+    repeated User applicants = 1;
+}
+
+message FetchJobsByCompanyIDRequest {
+    uint32 company_id = 1;
+}
+
+message FetchJobsByCompanyIDResponse {
+    repeated Job jobs = 1;
+}
+
+message FetchJobsByCategoryIDRequest {
+    uint32 category_id = 1;
+}
+
+message FetchJobsByCategoryIDResponse {
+    repeated Job jobs = 1;
+}
+
+message CreateNewJobCategoryRequest {
+    JobCategory category = 1;
+}
+
+message CreateNewJobCategoryResponse {
+    JobCategory category = 1;
+}
+
+message ModifyApplicantApplicationRequest {
+    JobStatus status = 1;
+}
+
+message ModifyApplicantApplicationResponse {
+    JobStatus status = 1;
+}
+
+message RegisterUserRequest {
+    SensitiveData credentials = 1;
+    User user = 2;
+}
+
+message RegisterUserResponse {
+    string access_token = 1;
+}
+
+message UserLoginRequest {
+    SensitiveData credentials = 1;
+}
+
+message UserLoginResponse {
+    string access_token = 1;
+}
+
+message FetchUserDataRequest {
+    uint32 user_id = 1;
+}
+
+message FetchUserDataResponse {
+    User user = 1;
+}
+
+message FetchJobCategoriesRequest {
+    
+}
+
+message FetchJobCategoriesResponse {
+    repeated JobCategory categories = 1;
+}
+
+message UpdateUserDataRequest {
+    SensitiveData credentials = 1;
+    User user = 2;
+}
+
+message UpdateUserDataResponse {
+    User user = 1;
+}
+
+message DeleteUserRequest {
+    uint32 user_id = 1;
+}
+
+message DeleteUserResponse {
+    string status = 1;
+}
+
+message FetchCompanyJobsByCategoryRequest {
+    uint32 company_id = 1;
+    uint32 category_id = 2;
+}
+
+message FetchCompanyJobsByCategoryResponse {
+    repeated Job jobs = 1;
+}
+
+message UserJobApplicationRequest {
+    JobStatus jobstatus = 1;
+}
+
+message UserJobApplicationResponse {
+    JobStatus jobstatus = 1;
+}
+
+message CheckAppliedJobsRequest {
+    uint32 user_id = 1;
+}
+
+message CheckAppliedJobsResponse {
+    repeated Job jobs = 1;
+}
+
+message UserSavedJobRequest {
+    SavedJob job = 1;
+}
+
+message UserSavedJobResponse {
+    SavedJob job = 1;
+}
+
+message UserRemoveSavedJobRequest {
+    SavedJob job = 1;
+}
+
+message UserRemoveSavedJobResponse {
+    string status = 1;
+}
+
+message NoParams {}
+
+message FetchAllJobsResponse {
+    repeated Job jobs = 1;
 }
