@@ -23,9 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type JobPortalServiceClient interface {
 	// admin specific rpc
-	AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminLoginResponse, error)
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	RegisterCompany(ctx context.Context, in *RegisterCompanyRequest, opts ...grpc.CallOption) (*RegisterCompanyResponse, error)
-	CompanyLogin(ctx context.Context, in *CompanyLoginRequest, opts ...grpc.CallOption) (*CompanyLoginResponse, error)
 	DeleteCompany(ctx context.Context, in *DeleteCompanyRequest, opts ...grpc.CallOption) (*DeleteCompanyResponse, error)
 	// fetching company data: called by companies and users
 	UpdateCompanyData(ctx context.Context, in *UpdateCompanyDataRequest, opts ...grpc.CallOption) (*UpdatecompanyDataResponse, error)
@@ -41,13 +40,13 @@ type JobPortalServiceClient interface {
 	ModifyApplicantApplication(ctx context.Context, in *ModifyApplicantApplicationRequest, opts ...grpc.CallOption) (*ModifyApplicantApplicationResponse, error)
 	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
 	RegisterUser(ctx context.Context, in *RegisterUserRequest, opts ...grpc.CallOption) (*RegisterUserResponse, error)
-	UserLogin(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*UserLoginResponse, error)
 	// fetching user data: can be called by companies while processing candidates, users for check/update profile
 	UpdateUserData(ctx context.Context, in *UpdateUserDataRequest, opts ...grpc.CallOption) (*UpdateUserDataResponse, error)
 	// fetch jobs of specific category by one company - filter by company and category
 	UserJobApplication(ctx context.Context, in *UserJobApplicationRequest, opts ...grpc.CallOption) (*UserJobApplicationResponse, error)
 	CheckAppliedJobs(ctx context.Context, in *CheckAppliedJobsRequest, opts ...grpc.CallOption) (*CheckAppliedJobsResponse, error)
 	UserSavedJob(ctx context.Context, in *UserSavedJobRequest, opts ...grpc.CallOption) (*UserSavedJobResponse, error)
+	UserCheckSavedJobs(ctx context.Context, in *UserCheckSavedJobsRequest, opts ...grpc.CallOption) (*UserCheckSavedJobsResponse, error)
 	UserRemoveSavedJob(ctx context.Context, in *UserRemoveSavedJobRequest, opts ...grpc.CallOption) (*UserRemoveSavedJobResponse, error)
 	FetchCompanyData(ctx context.Context, in *FetchCompanyDataRequest, opts ...grpc.CallOption) (*FetchCompanyDataResponse, error)
 	FetchUserData(ctx context.Context, in *FetchUserDataRequest, opts ...grpc.CallOption) (*FetchUserDataResponse, error)
@@ -56,6 +55,7 @@ type JobPortalServiceClient interface {
 	FetchJobsByCompanyID(ctx context.Context, in *FetchJobsByCompanyIDRequest, opts ...grpc.CallOption) (*FetchJobsByCompanyIDResponse, error)
 	FetchJobsByCategoryID(ctx context.Context, in *FetchJobsByCategoryIDRequest, opts ...grpc.CallOption) (*FetchJobsByCategoryIDResponse, error)
 	FetchCompanyJobsByCategory(ctx context.Context, in *FetchCompanyJobsByCategoryRequest, opts ...grpc.CallOption) (*FetchCompanyJobsByCategoryResponse, error)
+	FetchJobData(ctx context.Context, in *Job, opts ...grpc.CallOption) (*Job, error)
 }
 
 type jobPortalServiceClient struct {
@@ -66,9 +66,9 @@ func NewJobPortalServiceClient(cc grpc.ClientConnInterface) JobPortalServiceClie
 	return &jobPortalServiceClient{cc}
 }
 
-func (c *jobPortalServiceClient) AdminLogin(ctx context.Context, in *AdminLoginRequest, opts ...grpc.CallOption) (*AdminLoginResponse, error) {
-	out := new(AdminLoginResponse)
-	err := c.cc.Invoke(ctx, "/proto.JobPortalService/AdminLogin", in, out, opts...)
+func (c *jobPortalServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, "/proto.JobPortalService/Login", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,15 +78,6 @@ func (c *jobPortalServiceClient) AdminLogin(ctx context.Context, in *AdminLoginR
 func (c *jobPortalServiceClient) RegisterCompany(ctx context.Context, in *RegisterCompanyRequest, opts ...grpc.CallOption) (*RegisterCompanyResponse, error) {
 	out := new(RegisterCompanyResponse)
 	err := c.cc.Invoke(ctx, "/proto.JobPortalService/RegisterCompany", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *jobPortalServiceClient) CompanyLogin(ctx context.Context, in *CompanyLoginRequest, opts ...grpc.CallOption) (*CompanyLoginResponse, error) {
-	out := new(CompanyLoginResponse)
-	err := c.cc.Invoke(ctx, "/proto.JobPortalService/CompanyLogin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -183,15 +174,6 @@ func (c *jobPortalServiceClient) RegisterUser(ctx context.Context, in *RegisterU
 	return out, nil
 }
 
-func (c *jobPortalServiceClient) UserLogin(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*UserLoginResponse, error) {
-	out := new(UserLoginResponse)
-	err := c.cc.Invoke(ctx, "/proto.JobPortalService/UserLogin", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *jobPortalServiceClient) UpdateUserData(ctx context.Context, in *UpdateUserDataRequest, opts ...grpc.CallOption) (*UpdateUserDataResponse, error) {
 	out := new(UpdateUserDataResponse)
 	err := c.cc.Invoke(ctx, "/proto.JobPortalService/UpdateUserData", in, out, opts...)
@@ -222,6 +204,15 @@ func (c *jobPortalServiceClient) CheckAppliedJobs(ctx context.Context, in *Check
 func (c *jobPortalServiceClient) UserSavedJob(ctx context.Context, in *UserSavedJobRequest, opts ...grpc.CallOption) (*UserSavedJobResponse, error) {
 	out := new(UserSavedJobResponse)
 	err := c.cc.Invoke(ctx, "/proto.JobPortalService/UserSavedJob", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *jobPortalServiceClient) UserCheckSavedJobs(ctx context.Context, in *UserCheckSavedJobsRequest, opts ...grpc.CallOption) (*UserCheckSavedJobsResponse, error) {
+	out := new(UserCheckSavedJobsResponse)
+	err := c.cc.Invoke(ctx, "/proto.JobPortalService/UserCheckSavedJobs", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -300,14 +291,22 @@ func (c *jobPortalServiceClient) FetchCompanyJobsByCategory(ctx context.Context,
 	return out, nil
 }
 
+func (c *jobPortalServiceClient) FetchJobData(ctx context.Context, in *Job, opts ...grpc.CallOption) (*Job, error) {
+	out := new(Job)
+	err := c.cc.Invoke(ctx, "/proto.JobPortalService/FetchJobData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // JobPortalServiceServer is the server API for JobPortalService service.
 // All implementations must embed UnimplementedJobPortalServiceServer
 // for forward compatibility
 type JobPortalServiceServer interface {
 	// admin specific rpc
-	AdminLogin(context.Context, *AdminLoginRequest) (*AdminLoginResponse, error)
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	RegisterCompany(context.Context, *RegisterCompanyRequest) (*RegisterCompanyResponse, error)
-	CompanyLogin(context.Context, *CompanyLoginRequest) (*CompanyLoginResponse, error)
 	DeleteCompany(context.Context, *DeleteCompanyRequest) (*DeleteCompanyResponse, error)
 	// fetching company data: called by companies and users
 	UpdateCompanyData(context.Context, *UpdateCompanyDataRequest) (*UpdatecompanyDataResponse, error)
@@ -323,13 +322,13 @@ type JobPortalServiceServer interface {
 	ModifyApplicantApplication(context.Context, *ModifyApplicantApplicationRequest) (*ModifyApplicantApplicationResponse, error)
 	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
 	RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error)
-	UserLogin(context.Context, *UserLoginRequest) (*UserLoginResponse, error)
 	// fetching user data: can be called by companies while processing candidates, users for check/update profile
 	UpdateUserData(context.Context, *UpdateUserDataRequest) (*UpdateUserDataResponse, error)
 	// fetch jobs of specific category by one company - filter by company and category
 	UserJobApplication(context.Context, *UserJobApplicationRequest) (*UserJobApplicationResponse, error)
 	CheckAppliedJobs(context.Context, *CheckAppliedJobsRequest) (*CheckAppliedJobsResponse, error)
 	UserSavedJob(context.Context, *UserSavedJobRequest) (*UserSavedJobResponse, error)
+	UserCheckSavedJobs(context.Context, *UserCheckSavedJobsRequest) (*UserCheckSavedJobsResponse, error)
 	UserRemoveSavedJob(context.Context, *UserRemoveSavedJobRequest) (*UserRemoveSavedJobResponse, error)
 	FetchCompanyData(context.Context, *FetchCompanyDataRequest) (*FetchCompanyDataResponse, error)
 	FetchUserData(context.Context, *FetchUserDataRequest) (*FetchUserDataResponse, error)
@@ -338,6 +337,7 @@ type JobPortalServiceServer interface {
 	FetchJobsByCompanyID(context.Context, *FetchJobsByCompanyIDRequest) (*FetchJobsByCompanyIDResponse, error)
 	FetchJobsByCategoryID(context.Context, *FetchJobsByCategoryIDRequest) (*FetchJobsByCategoryIDResponse, error)
 	FetchCompanyJobsByCategory(context.Context, *FetchCompanyJobsByCategoryRequest) (*FetchCompanyJobsByCategoryResponse, error)
+	FetchJobData(context.Context, *Job) (*Job, error)
 	mustEmbedUnimplementedJobPortalServiceServer()
 }
 
@@ -345,14 +345,11 @@ type JobPortalServiceServer interface {
 type UnimplementedJobPortalServiceServer struct {
 }
 
-func (UnimplementedJobPortalServiceServer) AdminLogin(context.Context, *AdminLoginRequest) (*AdminLoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AdminLogin not implemented")
+func (UnimplementedJobPortalServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
 func (UnimplementedJobPortalServiceServer) RegisterCompany(context.Context, *RegisterCompanyRequest) (*RegisterCompanyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterCompany not implemented")
-}
-func (UnimplementedJobPortalServiceServer) CompanyLogin(context.Context, *CompanyLoginRequest) (*CompanyLoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CompanyLogin not implemented")
 }
 func (UnimplementedJobPortalServiceServer) DeleteCompany(context.Context, *DeleteCompanyRequest) (*DeleteCompanyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteCompany not implemented")
@@ -384,9 +381,6 @@ func (UnimplementedJobPortalServiceServer) DeleteUser(context.Context, *DeleteUs
 func (UnimplementedJobPortalServiceServer) RegisterUser(context.Context, *RegisterUserRequest) (*RegisterUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterUser not implemented")
 }
-func (UnimplementedJobPortalServiceServer) UserLogin(context.Context, *UserLoginRequest) (*UserLoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
-}
 func (UnimplementedJobPortalServiceServer) UpdateUserData(context.Context, *UpdateUserDataRequest) (*UpdateUserDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUserData not implemented")
 }
@@ -398,6 +392,9 @@ func (UnimplementedJobPortalServiceServer) CheckAppliedJobs(context.Context, *Ch
 }
 func (UnimplementedJobPortalServiceServer) UserSavedJob(context.Context, *UserSavedJobRequest) (*UserSavedJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserSavedJob not implemented")
+}
+func (UnimplementedJobPortalServiceServer) UserCheckSavedJobs(context.Context, *UserCheckSavedJobsRequest) (*UserCheckSavedJobsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserCheckSavedJobs not implemented")
 }
 func (UnimplementedJobPortalServiceServer) UserRemoveSavedJob(context.Context, *UserRemoveSavedJobRequest) (*UserRemoveSavedJobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserRemoveSavedJob not implemented")
@@ -423,6 +420,9 @@ func (UnimplementedJobPortalServiceServer) FetchJobsByCategoryID(context.Context
 func (UnimplementedJobPortalServiceServer) FetchCompanyJobsByCategory(context.Context, *FetchCompanyJobsByCategoryRequest) (*FetchCompanyJobsByCategoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FetchCompanyJobsByCategory not implemented")
 }
+func (UnimplementedJobPortalServiceServer) FetchJobData(context.Context, *Job) (*Job, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FetchJobData not implemented")
+}
 func (UnimplementedJobPortalServiceServer) mustEmbedUnimplementedJobPortalServiceServer() {}
 
 // UnsafeJobPortalServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -436,20 +436,20 @@ func RegisterJobPortalServiceServer(s grpc.ServiceRegistrar, srv JobPortalServic
 	s.RegisterService(&JobPortalService_ServiceDesc, srv)
 }
 
-func _JobPortalService_AdminLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AdminLoginRequest)
+func _JobPortalService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(JobPortalServiceServer).AdminLogin(ctx, in)
+		return srv.(JobPortalServiceServer).Login(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.JobPortalService/AdminLogin",
+		FullMethod: "/proto.JobPortalService/Login",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JobPortalServiceServer).AdminLogin(ctx, req.(*AdminLoginRequest))
+		return srv.(JobPortalServiceServer).Login(ctx, req.(*LoginRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -468,24 +468,6 @@ func _JobPortalService_RegisterCompany_Handler(srv interface{}, ctx context.Cont
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(JobPortalServiceServer).RegisterCompany(ctx, req.(*RegisterCompanyRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _JobPortalService_CompanyLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CompanyLoginRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(JobPortalServiceServer).CompanyLogin(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.JobPortalService/CompanyLogin",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JobPortalServiceServer).CompanyLogin(ctx, req.(*CompanyLoginRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -670,24 +652,6 @@ func _JobPortalService_RegisterUser_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _JobPortalService_UserLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserLoginRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(JobPortalServiceServer).UserLogin(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.JobPortalService/UserLogin",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JobPortalServiceServer).UserLogin(ctx, req.(*UserLoginRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _JobPortalService_UpdateUserData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateUserDataRequest)
 	if err := dec(in); err != nil {
@@ -756,6 +720,24 @@ func _JobPortalService_UserSavedJob_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(JobPortalServiceServer).UserSavedJob(ctx, req.(*UserSavedJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _JobPortalService_UserCheckSavedJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserCheckSavedJobsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobPortalServiceServer).UserCheckSavedJobs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.JobPortalService/UserCheckSavedJobs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobPortalServiceServer).UserCheckSavedJobs(ctx, req.(*UserCheckSavedJobsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -904,6 +886,24 @@ func _JobPortalService_FetchCompanyJobsByCategory_Handler(srv interface{}, ctx c
 	return interceptor(ctx, in, info, handler)
 }
 
+func _JobPortalService_FetchJobData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Job)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JobPortalServiceServer).FetchJobData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.JobPortalService/FetchJobData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JobPortalServiceServer).FetchJobData(ctx, req.(*Job))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // JobPortalService_ServiceDesc is the grpc.ServiceDesc for JobPortalService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -912,16 +912,12 @@ var JobPortalService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*JobPortalServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AdminLogin",
-			Handler:    _JobPortalService_AdminLogin_Handler,
+			MethodName: "Login",
+			Handler:    _JobPortalService_Login_Handler,
 		},
 		{
 			MethodName: "RegisterCompany",
 			Handler:    _JobPortalService_RegisterCompany_Handler,
-		},
-		{
-			MethodName: "CompanyLogin",
-			Handler:    _JobPortalService_CompanyLogin_Handler,
 		},
 		{
 			MethodName: "DeleteCompany",
@@ -964,10 +960,6 @@ var JobPortalService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _JobPortalService_RegisterUser_Handler,
 		},
 		{
-			MethodName: "UserLogin",
-			Handler:    _JobPortalService_UserLogin_Handler,
-		},
-		{
 			MethodName: "UpdateUserData",
 			Handler:    _JobPortalService_UpdateUserData_Handler,
 		},
@@ -982,6 +974,10 @@ var JobPortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserSavedJob",
 			Handler:    _JobPortalService_UserSavedJob_Handler,
+		},
+		{
+			MethodName: "UserCheckSavedJobs",
+			Handler:    _JobPortalService_UserCheckSavedJobs_Handler,
 		},
 		{
 			MethodName: "UserRemoveSavedJob",
@@ -1014,6 +1010,10 @@ var JobPortalService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "FetchCompanyJobsByCategory",
 			Handler:    _JobPortalService_FetchCompanyJobsByCategory_Handler,
+		},
+		{
+			MethodName: "FetchJobData",
+			Handler:    _JobPortalService_FetchJobData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

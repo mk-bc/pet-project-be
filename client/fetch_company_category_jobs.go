@@ -8,7 +8,7 @@ import (
 	pb "github.com/mk-bc/pet-project-be/proto"
 )
 
-func FetchCompanyJobsByCategory(client pb.JobPortalServiceClient, companyID uint32, categoryID uint32) {
+func FetchCompanyJobsByCategory(client *JobPortalServiceClient, companyID uint32, categoryID uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -16,7 +16,7 @@ func FetchCompanyJobsByCategory(client pb.JobPortalServiceClient, companyID uint
 		CompanyId:  companyID,
 		CategoryId: categoryID,
 	}
-	response, err := client.FetchCompanyJobsByCategory(ctx, in)
+	response, err := client.service.FetchCompanyJobsByCategory(ctx, in)
 	if err != nil {
 		log.Fatalf("Error getting response: %v", err)
 	}

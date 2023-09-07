@@ -8,11 +8,11 @@ import (
 	pb "github.com/mk-bc/pet-project-be/proto"
 )
 
-func ListAllJobs(client pb.JobPortalServiceClient) {
+func ListAllJobs(client *JobPortalServiceClient) {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
-	response, err := client.FetchAllJobs(ctx, &pb.NoParams{})
+	response, err := client.service.FetchAllJobs(ctx, &pb.NoParams{})
 	if err != nil {
 		log.Fatalf("Error fetching jobs: %v", err)
 	}

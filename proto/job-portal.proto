@@ -6,13 +6,12 @@ option go_package="./proto";
 
 service JobPortalService {
     // admin specific rpc
-    rpc AdminLogin(AdminLoginRequest) returns (AdminLoginResponse){};
+    rpc Login(LoginRequest) returns (LoginResponse){};
     // rpc RegisterAdmin(RegisterAdminRequest) returns (RegisterAdminResponse) {};
 
     // company rpc 
     
     rpc RegisterCompany(RegisterCompanyRequest) returns (RegisterCompanyResponse) {};
-    rpc CompanyLogin(CompanyLoginRequest) returns (CompanyLoginResponse) {};
     rpc DeleteCompany(DeleteCompanyRequest) returns (DeleteCompanyResponse) {};
     // fetching company data: called by companies and users
     rpc UpdateCompanyData(UpdateCompanyDataRequest) returns (UpdatecompanyDataResponse){};
@@ -31,13 +30,13 @@ service JobPortalService {
     // user rpc
     
     rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse){};
-    rpc UserLogin(UserLoginRequest) returns (UserLoginResponse){};
     // fetching user data: can be called by companies while processing candidates, users for check/update profile
     rpc UpdateUserData(UpdateUserDataRequest) returns (UpdateUserDataResponse){};
     // fetch jobs of specific category by one company - filter by company and category
     rpc UserJobApplication(UserJobApplicationRequest) returns (UserJobApplicationResponse){};
     rpc CheckAppliedJobs(CheckAppliedJobsRequest) returns (CheckAppliedJobsResponse){};
     rpc UserSavedJob(UserSavedJobRequest) returns (UserSavedJobResponse){};
+    rpc UserCheckSavedJobs(UserCheckSavedJobsRequest) returns (UserCheckSavedJobsResponse){};
     rpc UserRemoveSavedJob(UserRemoveSavedJobRequest) returns (UserRemoveSavedJobResponse){};
 
 
@@ -51,6 +50,8 @@ service JobPortalService {
     rpc FetchJobsByCompanyID(FetchJobsByCompanyIDRequest) returns (FetchJobsByCompanyIDResponse){};
     rpc FetchJobsByCategoryID(FetchJobsByCategoryIDRequest) returns (FetchJobsByCategoryIDResponse){};
     rpc FetchCompanyJobsByCategory(FetchCompanyJobsByCategoryRequest) returns (FetchCompanyJobsByCategoryResponse){};
+
+    rpc FetchJobData(Job) returns (Job){};
 }
 
 enum ApplicationStatus {
@@ -117,11 +118,11 @@ message SavedJob {
     uint32 user_id = 3;
 }
 
-message AdminLoginRequest {
-    SensitiveData Admin = 1;
+message LoginRequest {
+    SensitiveData credentials = 1;
 }
 
-message AdminLoginResponse {
+message LoginResponse {
     string access_token = 1;
 }
 
@@ -134,16 +135,9 @@ message RegisterCompanyResponse {
     string access_token = 1;
 }
 
-message CompanyLoginRequest {
-    SensitiveData credentials = 1;
-}
-
-message CompanyLoginResponse {
-    string access_token = 1;
-}
-
 message DeleteCompanyRequest {
     uint32 company_id = 1;
+    string email = 2;
 }
 
 message DeleteCompanyResponse {
@@ -188,6 +182,7 @@ message UpdateJobDataResponse {
 
 message DeleteJobRequest {
     uint32 job_id = 1;
+    string email = 2;
 }
 
 message DeleteJobResponse {
@@ -199,7 +194,7 @@ message FetchApplicantsByJobIDRequest {
 }
 
 message FetchApplicantsByJobIDResponse {
-    repeated User applicants = 1;
+    repeated JobStatus applicants = 1;
 }
 
 message FetchJobsByCompanyIDRequest {
@@ -240,14 +235,6 @@ message RegisterUserRequest {
 }
 
 message RegisterUserResponse {
-    string access_token = 1;
-}
-
-message UserLoginRequest {
-    SensitiveData credentials = 1;
-}
-
-message UserLoginResponse {
     string access_token = 1;
 }
 
@@ -315,6 +302,14 @@ message UserSavedJobRequest {
 
 message UserSavedJobResponse {
     SavedJob job = 1;
+}
+
+message UserCheckSavedJobsRequest {
+    uint32 user_id = 1;
+}
+
+message UserCheckSavedJobsResponse {
+    repeated Job jobs = 1;
 }
 
 message UserRemoveSavedJobRequest {

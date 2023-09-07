@@ -8,14 +8,14 @@ import (
 	pb "github.com/mk-bc/pet-project-be/proto"
 )
 
-func FetchUserData(client pb.JobPortalServiceClient, id uint32) {
+func FetchUserData(client *JobPortalServiceClient, id uint32) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	in := &pb.FetchUserDataRequest{
 		UserId: id,
 	}
-	response, err := client.FetchUserData(ctx, in)
+	response, err := client.service.FetchUserData(ctx, in)
 	if err != nil {
 		log.Println("Error getting response: ", err)
 	}
