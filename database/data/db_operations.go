@@ -23,6 +23,15 @@ type Database interface {
 	FetchApplicantsByJobID(uint32) ([]*models.JobStatus, error)
 	ModifyApplicationStatus(models.JobStatus) (*models.JobStatus, error)
 
+	RegisterUser(*models.SensitiveData, *models.User) error
+	DeleteUser(uint32, string) error
+	UpdateUserData(models.User, models.SensitiveData) (*models.User, error)
+	UserJobApplication(models.JobStatus) (*models.JobStatus, error)
+	CheckAppliedJobs(uint32) ([]*models.JobStatus, error)
+	UserSavedJob(models.SavedJob) (*models.SavedJob, error)
+	CheckSavedJobs(uint32) ([]*models.Job, error)
+	UserRemoveSavedJob(models.SavedJob) error
+
 	FetchAllJobs() ([]*models.Job, error)
 	FetchCompanyData(uint32) (*models.Company, error)
 	FetchUserData(uint32) (*models.User, error)
@@ -33,6 +42,7 @@ type Database interface {
 
 	FetchJobData(uint32) (*models.Job, error)
 	FetchCompanyDataByEmail(string) (*models.Company, error) //no rpc call yet
+	FetchUserDataByEmail(string) (*models.User, error)
 }
 
 type DBClient struct {
@@ -179,6 +189,14 @@ func (db *DBClient) FetchCompanyDataByEmail(email string) (*models.Company, erro
 	return &company, nil
 }
 
+func (db *DBClient) FetchUserDataByEmail(email string) (*models.User, error) {
+	var user models.User
+	if err := db.Db.Where("user_email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (db *DBClient) FetchApplicantsByJobID(jobID uint32) ([]*models.JobStatus, error) {
 	var applicantStatuses []*models.JobStatus
 	if err := db.Db.Where("job_id = ?", jobID).Find(&applicantStatuses).Error; err != nil {
@@ -194,4 +212,75 @@ func (db *DBClient) ModifyApplicationStatus(jobStatus models.JobStatus) (*models
 		return nil, err
 	}
 	return &jobStatus, nil
+}
+
+func (db *DBClient) RegisterUser(credentials *models.SensitiveData, user *models.User) error {
+	if err := db.Db.Create(&credentials).Error; err != nil {
+		return fmt.Errorf("Error credentials: %v", err)
+	}
+	if err := db.Db.Create(&user).Error; err != nil {
+		return fmt.Errorf("Error inserting user record: %v", err)
+	}
+	return nil
+}
+
+func (db *DBClient) DeleteUser(userID uint32, userEmail string) error {
+	// onDelete - CASCADE => record in user table is also deleted
+	if err := db.Db.Where("email = ?", userEmail).Delete(&models.SensitiveData{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (db *DBClient) UpdateUserData(user models.User, creds models.SensitiveData) (*models.User, error) {
+	if err := db.Db.Model(&models.User{}).Where("user_email = ?", creds.Email).Updates(models.User{
+		UserName:    user.UserName,
+		UserImage:   user.UserImage,
+		Description: user.Description,
+	}).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (db *DBClient) UserJobApplication(application models.JobStatus) (*models.JobStatus, error) {
+	if err := db.Db.Debug().Save(&application).Error; err != nil {
+		return nil, err
+	}
+	return &application, nil
+}
+
+func (db *DBClient) CheckAppliedJobs(userID uint32) ([]*models.JobStatus, error) {
+	var jobApplications []*models.JobStatus
+	if err := db.Db.Debug().Where("user_id = ?", userID).Find(&jobApplications).Error; err != nil {
+		return nil, err
+	}
+	return jobApplications, nil
+}
+
+func (db *DBClient) UserSavedJob(savedJob models.SavedJob) (*models.SavedJob, error) {
+	if err := db.Db.Debug().Save(&savedJob).Error; err != nil {
+		return nil, err
+	}
+	return &savedJob, nil
+}
+
+/*
+sql - select j.id,j.title,j.description, j.salary, j.companyID, j.categoryID from user u join
+savedJob sj on u.id = sj.user_id join job j
+on j.id = sj.job_id
+*/
+func (db *DBClient) CheckSavedJobs(userID uint32) ([]*models.Job, error) {
+	var jobs []*models.Job
+	if err := db.Db.Model(&models.Job{}).Joins("inner join saved_jobs on saved_jobs.job_id = jobs.id").Joins("inner join users on users.id = saved_jobs.user_id").Where("users.id = ?", userID).Find(&jobs).Error; err != nil {
+		return nil, err
+	}
+	return jobs, nil
+}
+
+func (db *DBClient) UserRemoveSavedJob(savedJob models.SavedJob) error {
+	if err := db.Db.Debug().Where("user_id = ? and job_id = ?", savedJob.UserID, savedJob.JobID).Delete(&models.SavedJob{}).Error; err != nil {
+		return err
+	}
+	return nil
 }

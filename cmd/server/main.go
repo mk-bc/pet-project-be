@@ -27,14 +27,15 @@ func accessibleRoles() map[string][]string {
 		servicePath + "DeleteJob":                  {"company", "admin"},
 		servicePath + "FetchApplicantsByJobID":     {"company", "admin"},
 		servicePath + "ModifyApplicantApplication": {"company"},
-		servicePath + "DeleteUser":                 {"user", "admin"},
-		servicePath + "UpdateUserData":             {"user"},
-		servicePath + "UserJobApplication":         {"user"},
-		servicePath + "CheckAppliedJobs":           {"user", "admin"},
-		servicePath + "UserSavedJob":               {"user"},
-		servicePath + "UserCheckSavedJobs":         {"user", "admin"},
-		servicePath + "UserRemoveSavedJob":         {"user"},
+		servicePath + "DeleteUser":                 {"applicant", "admin"},
+		servicePath + "UpdateUserData":             {"applicant"},
+		servicePath + "UserJobApplication":         {"applicant"},
+		servicePath + "CheckAppliedJobs":           {"applicant", "admin"},
+		servicePath + "UserSavedJob":               {"applicant"},
+		servicePath + "UserCheckSavedJobs":         {"applicant", "admin"},
+		servicePath + "UserRemoveSavedJob":         {"applicant"},
 	}
+	// modified user => applicant
 }
 
 func main() {

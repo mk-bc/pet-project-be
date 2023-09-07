@@ -265,6 +265,7 @@ message UpdateUserDataResponse {
 
 message DeleteUserRequest {
     uint32 user_id = 1;
+    string email = 2;
 }
 
 message DeleteUserResponse {
@@ -293,7 +294,7 @@ message CheckAppliedJobsRequest {
 }
 
 message CheckAppliedJobsResponse {
-    repeated Job jobs = 1;
+    repeated JobStatus jobs = 1;
 }
 
 message UserSavedJobRequest {

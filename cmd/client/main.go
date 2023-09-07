@@ -16,7 +16,7 @@ import (
 const port = ":8080"
 
 const (
-	email           = "ops@bcode.in"
+	email           = "mk@bcode.in" //"user2@user.in"
 	refreshDuration = 30 * time.Second
 )
 
@@ -51,7 +51,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
-	password := os.Getenv("company_password")
+	password := os.Getenv("mk_password")
+	// password := "user2"
 
 	jobPortalServiceClient := client.NewJobPortalServiceClient(conn, email, password)
 	clientInterceptor, err := auth.NewClientInterceptor(jobPortalServiceClient, authMethods(), refreshDuration)
@@ -130,9 +131,57 @@ func main() {
 	// fetch applicants by job id
 	// client.FetchApplicantsByJobID(grpcClient, 1)
 	// modifying applicant application status
-	client.ModifyApplicationStatus(grpcClient, &pb.JobStatus{
-		UserId:            1,
-		JobId:             1,
-		ApplicationStatus: pb.ApplicationStatus_approved,
+	// client.ModifyApplicationStatus(grpcClient, &pb.JobStatus{
+	// 	UserId:            1,
+	// 	JobId:             1,
+	// 	ApplicationStatus: pb.ApplicationStatus_approved,
+	// })
+	// creating new user
+	// client.NewUser(grpcClient,
+	// 	&pb.SensitiveData{
+	// 		Email:    "user2@user.in",
+	// 		Password: "user2",
+	// 	},
+	// 	&pb.User{
+	// 		UserName:    "user2Name",
+	// 		UserImage:   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-A4V_QmCM2vdqFTxj8e5etw_i31Z27LYGMw&usqp=CAU",
+	// 		Description: "User2 description",
+	// 	},
+	// )
+	// deleting user
+	// client.DeleteUser(grpcClient, 5)
+
+	// update user data
+	// mk := client.FetchUserData(grpcClient, 1)
+	// client.UpdateUserData(grpcClient,
+	// 	&pb.User{
+	// 		UserName:    mk.UserName,
+	// 		UserImage:   mk.UserImage,
+	// 		Description: "Update user data rpc call",
+	// 	},
+	// )
+
+	// user applying for a job
+	// client.UserJobApplication(grpcClient, &pb.JobStatus{
+	// 	JobId:  2,
+	// 	UserId: 1,
+	// })
+
+	// user checking up on applied jobs
+	// client.CheckUserAppliedJobs(grpcClient, 1)
+
+	// user saving liked jobs
+	// client.UserSavedJob(grpcClient, &pb.SavedJob{
+	// 	UserId: 6,
+	// 	JobId:  9,
+	// })
+
+	// user checking liked/saved jobs
+	// client.UserCheckSavedJobs(grpcClient, 1)
+
+	// user removing job from liked/saved jobs
+	client.UserRemoveSavedJob(grpcClient, &pb.SavedJob{
+		UserId: 1,
+		JobId:  2,
 	})
 }
