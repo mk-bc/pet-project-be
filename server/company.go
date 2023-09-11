@@ -15,6 +15,15 @@ func (server *JobPortalServiceServer) RegisterCompany(
 	ctx context.Context,
 	req *pb.RegisterCompanyRequest) (*pb.RegisterCompanyResponse, error) {
 	log.Println("server: registering a new company")
+
+	if req.CompanyCredentials.Email == "" || req.CompanyCredentials.Password == "" {
+		return nil, fmt.Errorf("Enter proper credentials")
+	}
+
+	if req.Company.CompanyName == "" || req.Company.Description == "" {
+		return nil, fmt.Errorf("Enter the company mandatory details")
+	}
+
 	credentials := &models.SensitiveData{
 		Email:    req.CompanyCredentials.Email,
 		Password: req.CompanyCredentials.Password,
@@ -94,7 +103,8 @@ func (server *JobPortalServiceServer) FetchCompanyData(
 	log.Println("server: fetch company data")
 	company, err := server.Db.FetchCompanyData(req.CompanyId)
 	if err != nil {
-		log.Fatalf("Unable to retrieve company data: %v", err)
+		log.Printf("Unable to retrieve company data: %v", err)
+		return nil, err
 	}
 	return &pb.FetchCompanyDataResponse{
 		Company: &pb.Company{
@@ -113,7 +123,8 @@ func (server *JobPortalServiceServer) FetchApplicantsByJobID(
 	log.Println("server: fetching applicants by jobID")
 	result, err := server.Db.FetchApplicantsByJobID(req.JobId)
 	if err != nil {
-		log.Fatal("Error retreiving applicants data: ", err)
+		log.Print("Error retreiving applicants data: ", err)
+		return nil, err
 	}
 	var response []*pb.JobStatus
 	for _, applicant := range result {
@@ -137,7 +148,8 @@ func (server *JobPortalServiceServer) ModifyApplicantApplication(
 		ApplicationStatus: models.ApplicationStatus(req.Status.ApplicationStatus.String()),
 	})
 	if err != nil {
-		log.Fatalf("Error modifying job status: %v", err)
+		log.Printf("Error modifying job status: %v", err)
+		return nil, err
 	}
 	return &pb.ModifyApplicantApplicationResponse{
 		Status: &pb.JobStatus{

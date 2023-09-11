@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/mk-bc/pet-project-be/models"
@@ -14,6 +15,15 @@ func (server *JobPortalServiceServer) RegisterUser(
 	ctx context.Context,
 	req *pb.RegisterUserRequest) (*pb.RegisterUserResponse, error) {
 	log.Println("server: register new user")
+
+	if req.Credentials.Email == "" || req.Credentials.Password == "" {
+		return nil, fmt.Errorf("Enter proper credentials")
+	}
+
+	if req.User.UserName == "" || req.User.Description == "" {
+		return nil, fmt.Errorf("Enter the mandatory fields")
+	}
+
 	credentials := &models.SensitiveData{
 		Email:    req.Credentials.Email,
 		Password: req.Credentials.Password,
@@ -44,9 +54,14 @@ func (server *JobPortalServiceServer) FetchUserData(
 	ctx context.Context,
 	req *pb.FetchUserDataRequest) (*pb.FetchUserDataResponse, error) {
 	log.Println("server: fetch user data")
+
+	if req.UserId == 0 {
+		return nil, fmt.Errorf("Provide valid user ID")
+	}
+
 	user, err := server.Db.FetchUserData(req.UserId)
 	if err != nil {
-		log.Fatalf("Error retrieving user data: %v", err)
+		log.Printf("Error retrieving user data: %v", err)
 		return nil, err
 	}
 	return &pb.FetchUserDataResponse{
@@ -92,16 +107,30 @@ func (server *JobPortalServiceServer) DeleteUser(
 	ctx context.Context,
 	req *pb.DeleteUserRequest) (*pb.DeleteUserResponse, error) {
 	log.Println("server: deleting user")
+
+	if req.Email == "" || req.UserId == 0 {
+		return nil, fmt.Errorf("Provide valid email and userID")
+	}
+
 	user, err := server.Db.FetchUserDataByEmail(req.Email)
 	if err != nil {
-		log.Fatalf("Error getting user data for verification: %v", err)
+		log.Printf("Error getting user data for verification: %v", err)
+		return &pb.DeleteUserResponse{
+			Status: "Failed to delete: error getting user data",
+		}, nil
 	}
 	if user.ID != uint(req.UserId) {
-		log.Fatalf("Unable to delete user: Credentials mismatch")
+		log.Printf("Unable to delete user: Credentials mismatch")
+		return &pb.DeleteUserResponse{
+			Status: "Failed to delete: Credentials mismatch",
+		}, nil
 	}
 	err = server.Db.DeleteUser(req.UserId, req.Email)
 	if err != nil {
-		log.Fatal("Error deleting user data: ", err)
+		log.Print("Error deleting user data: ", err)
+		return &pb.DeleteUserResponse{
+			Status: "Failed to delete",
+		}, nil
 	}
 	return &pb.DeleteUserResponse{
 		Status: "Deleted user successfully",
@@ -180,6 +209,7 @@ func (server *JobPortalServiceServer) UserCheckSavedJobs(
 	result, err := server.Db.CheckSavedJobs(req.UserId)
 	if err != nil {
 		log.Println("Error getting user saved jobs: ", err)
+		return nil, err
 	}
 	var response []*pb.Job
 	for _, job := range result {

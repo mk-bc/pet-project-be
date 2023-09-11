@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/mk-bc/pet-project-be/models"
@@ -12,6 +13,9 @@ func (server *JobPortalServiceServer) CreateNewJobCategory(
 	ctx context.Context,
 	req *pb.CreateNewJobCategoryRequest) (*pb.CreateNewJobCategoryResponse, error) {
 	log.Println("server: create new job category")
+	if req.Category.CategoryName == "" {
+		return nil, fmt.Errorf("No name to insert")
+	}
 	err := server.Db.CreateNewJobCategory(models.JobCategory{
 		CategoryName: req.Category.CategoryName,
 	})
@@ -30,7 +34,7 @@ func (server *JobPortalServiceServer) FetchJobCategories(
 
 	job_categories, err := server.Db.FetchJobCategories()
 	if err != nil {
-		log.Fatalf("Error retrieving job cateogories: %v", err)
+		log.Printf("Error retrieving job cateogories: %v", err)
 		return nil, err
 	}
 	var response []*pb.JobCategory
