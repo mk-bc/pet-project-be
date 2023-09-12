@@ -59,7 +59,7 @@ func (db *DBClient) Login(email string) (*models.SensitiveData, error) {
 
 func (db *DBClient) FetchAllJobs() ([]*models.Job, error) {
 	var jobs []*models.Job
-	if err := db.Db.Model(&models.Job{}).Find(&jobs).Error; err != nil {
+	if err := db.Db.Debug().Model(&models.Job{}).Find(&jobs).Error; err != nil {
 		return nil, err
 	}
 	return jobs, nil
@@ -114,7 +114,7 @@ func (db *DBClient) FetchCompanyJobsByCategory(companyID uint32, categoryID uint
 }
 
 func (db *DBClient) CreateNewJob(job models.Job) (*models.Job, error) {
-	if err := db.Db.Create(&job).Error; err != nil {
+	if err := db.Db.Debug().Create(&job).Error; err != nil {
 		return nil, err
 	}
 	return &job, nil

@@ -3,6 +3,7 @@ module github.com/mk-bc/pet-project-be
 go 1.21.0
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/Valgard/godotenv v0.0.0-20200511222744-8873b92a09c5
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/jinzhu/gorm v1.9.16
